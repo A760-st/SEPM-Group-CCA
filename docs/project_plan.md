@@ -219,5 +219,3 @@ This project plan is a working document. It should be reviewed by the team and u
 | Last updated | 12 Nov 2026 |
 
 ---
-
-**Document location:** `docs/project-management/PROJECT_PLAN.md`
