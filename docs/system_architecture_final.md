@@ -1,13 +1,14 @@
-# College Event Management System — System Architecture
+# College Event Management System — System Architecture (Final)
 
 | Item | Details |
 |---|---|
 | Project | College Event Management System |
 | Document | System Architecture (Design Phase) |
+| Version | 1.0 – Final |
 | Based on | Project Plan (last updated 12 Nov 2026) |
-| Status | Proposed – pending team review |
+| Status | **Finalized – approved after team review (13 Nov 2026)** |
 
-> The project plan states that the technology stack and detailed architecture will be determined during design. The stack below is a **proposal** suited to a prototype and can be swapped without changing the overall structure.
+> The technology stack and architecture below were reviewed and confirmed by the team. If a more feasible or suitable alternative is found during development, it will be discussed with the team and this document updated accordingly.
 
 ---
 
@@ -17,9 +18,11 @@
 |---|---|
 | Centralized event platform | Single web application backed by one shared database |
 | Prevent duplicate registrations | Enforced in the database (unique constraint) and checked in the service layer |
-| Two main roles (Student, Organizer) plus optional Admin | Role-based access control (RBAC) on every protected endpoint |
+| Three roles: Student, Organizer, Administrator | Role-based access control (RBAC) on every protected endpoint |
+| Secure role management | Public sign-up always creates a Student; Organizer and Admin roles are assigned only by an Administrator |
+| Controlled student sign-up | Students self-register with their college Gmail address and college ID card number |
 | Certificates for eligible participants | Organizer-controlled issuance; PDF generated and stored; students download only their own |
-| Prototype scope, small team | Simple layered monolith, easy to build, test and demo |
+| Prototype scope, small team | Simple layered monolith, easy to build, test and demo; no unnecessary complexity |
 | Out-of-scope items kept out | No payment, QR attendance, AI recommendations, mobile apps, or SMS modules |
 
 ## 2. Architectural Style
@@ -28,24 +31,26 @@ A **three-tier layered monolith**:
 
 1. **Presentation tier**: responsive web single-page application (SPA).
 2. **Application tier**: one REST API server organized into modules.
-3. **Data tier**: relational database plus file storage for certificate PDFs.
+3. **Data tier**: relational database plus local file storage for certificate PDFs.
 
 A monolith is chosen over microservices because the scope is small, the team has four members, and the timeline is short. Modules are separated internally so they can be split later if needed.
 
-## 3. Proposed Technology Stack
+## 3. Technology Stack (Confirmed)
 
 | Layer | Choice | Reason |
 |---|---|---|
-| Frontend | React + React Router, Tailwind CSS (or plain CSS) | Component-based UI, fast to prototype |
+| Frontend | React + React Router, Tailwind CSS | Component-based UI, fast to prototype |
 | Backend | Node.js + Express | Simple REST API, large ecosystem |
-| ORM / migrations | Prisma (or Sequelize) | Schema as code, type-safe queries |
-| Database | PostgreSQL (MySQL is an acceptable alternative) | Relational integrity, unique constraints, transactions |
+| ORM / migrations | Prisma | Schema as code, type-safe queries |
+| Database | PostgreSQL | Relational integrity, unique constraints, transactions |
 | Authentication | JWT (access token) + bcrypt password hashing | Stateless, simple RBAC |
-| Validation | Zod or Joi | Consistent request validation |
-| Certificate generation | PDFKit (or Puppeteer) | Generates PDFs server-side |
-| File storage | Local disk for prototype; S3-compatible bucket if deployed | Stores issued certificate PDFs |
+| Validation | Zod | Consistent request validation; strips or rejects unexpected fields |
+| Certificate generation | PDFKit | Generates PDFs server-side |
+| File storage | Local disk (server folder, not publicly served) | Simplest option for a small-scale project |
 | Testing | Jest + Supertest (API), React Testing Library (UI) | Covers workflows listed in Phase 4 |
 | Version control / tracking | Git repository + Jira | Matches Section 8 of the project plan |
+
+Possible alternatives (for example MySQL, Sequelize, Joi, or an S3-compatible bucket for a later deployment) may be considered during development only if they prove more suitable. They are not part of the current plan.
 
 ## 4. High-Level System Architecture
 
@@ -54,7 +59,7 @@ flowchart TB
     subgraph Users
         S[Student]
         O[Event Organizer]
-        A[Administrator - optional]
+        A[Administrator]
     end
 
     subgraph Client["Presentation Tier - React SPA"]
@@ -73,7 +78,7 @@ flowchart TB
 
     subgraph Data["Data Tier"]
         DB[(PostgreSQL)]
-        FS[(Certificate File Storage)]
+        FS[(Certificate File Storage - local disk)]
     end
 
     S --> UI
@@ -92,26 +97,27 @@ flowchart TB
 
 | Area | Pages / Components | Role access |
 |---|---|---|
-| Public | Login, Register (account sign-up), Event list, Event details | Everyone (details may require login to register) |
-| Student | My Registrations (status), My Certificates (view/download) | Student |
-| Organizer | Create/Edit Event, Manage My Events, Participant List, Schedule and Venue editor, Issue Certificates | Organizer |
-| Admin (optional) | User and venue oversight | Admin |
+| Public | Login, Register (college email, college ID number, name, department, password), Event list, Event details | Everyone (registering for an event requires login) |
+| Student | My Registrations (status, withdraw), My Certificates (view/download) | Student |
+| Organizer | Create/Edit Event, Manage My Events, Participant List, Schedule and Venue selection, Issue Certificates | Organizer |
+| Admin | User Management (view users, assign or change roles), Venue Management, oversight of all events | Admin |
 | Shared | Navbar, route guards, form components, toast/error components | All |
 
 Key behaviors:
 - Route guards redirect users who lack the required role.
+- The registration form never sends or offers a role field; the server decides the role.
 - The API client attaches the JWT and handles `401` by returning the user to login.
-- The "Register" button is disabled when the student is already registered, the event is cancelled, or registration is closed. The server still enforces these rules.
+- The "Register" button is disabled when the student is already registered, the event is cancelled, the event is full, or registration is closed. The server still enforces these rules.
 
 ### 5.2 Backend Modules
 
 | Module | Responsibility |
 |---|---|
-| **Auth** | Login, account creation, password hashing, JWT issue/verify |
-| **Users** | Profile retrieval, role management (admin) |
-| **Events** | Create, update, cancel, list, detail; status handling |
+| **Auth** | Self-registration (always as Student), login, password hashing, JWT issue/verify |
+| **Users** | Profile retrieval; **role assignment and user listing (Admin only)** |
+| **Events** | Create, update, cancel, list, detail; status handling; optional participant limit |
 | **Venues and Schedules** | Venue records, event date/time/venue assignment, clash checks |
-| **Registrations** | Register, prevent duplicates, view own status, organizer participant list |
+| **Registrations** | Register, withdraw, prevent duplicates, view own status, organizer participant list |
 | **Certificates** | Mark participants eligible, generate PDF, issue, student download |
 | **Common** | Validation, error handling, logging, config |
 
@@ -128,7 +134,7 @@ flowchart LR
 ```
 
 - **Controller**: parses the request and returns the response.
-- **Service**: holds business rules (duplicate check, ownership check, eligibility, status transitions).
+- **Service**: holds business rules (duplicate check, capacity check, ownership check, eligibility, status transitions, role rules).
 - **Repository**: all database access; no business logic.
 
 ## 6. Data Architecture
@@ -146,9 +152,10 @@ erDiagram
     USERS {
         int id PK
         string name
-        string email UK
+        string email UK "college Gmail address"
+        string college_id UK "college ID card number"
         string password_hash
-        string role "STUDENT | ORGANIZER | ADMIN"
+        string role "STUDENT (default) | ORGANIZER | ADMIN"
         string department
         datetime created_at
     }
@@ -164,10 +171,10 @@ erDiagram
         text description
         int organizer_id FK
         int venue_id FK
-        datetime start_time
+        datetime start_time "single date and time"
         datetime end_time
         datetime registration_deadline
-        int max_participants "nullable"
+        int max_participants "nullable - optional limit"
         string status "DRAFT | PUBLISHED | CANCELLED | COMPLETED"
         string cancel_reason "nullable"
         datetime created_at
@@ -193,16 +200,22 @@ erDiagram
 
 ### 6.2 Key Constraints
 
-| Rule from project plan | Enforcement |
+| Rule | Enforcement |
 |---|---|
 | Prevent duplicate registrations | `UNIQUE (event_id, student_id)` on `registrations`; service returns `409 Conflict` |
 | One certificate per participant per event | `UNIQUE (registration_id)` on `certificates` |
-| Unique login identity | `UNIQUE (email)` on `users` |
-| Organizers manage only their own events | Service checks `events.organizer_id = current user` (admin may override) |
+| Unique login identity | `UNIQUE (email)` and `UNIQUE (college_id)` on `users` |
+| College-only sign-up | Email domain checked against an allowed-domain setting; college ID checked against the college's ID format (both configurable) |
+| Default role is Student | `users.role` defaults to `STUDENT`; the register endpoint ignores or rejects any `role` value in the request |
+| Only an Admin changes roles | Role-change endpoint requires ADMIN; self-demotion and removal of the last Admin are blocked |
+| Organizers manage only their own events | Service checks `events.organizer_id = current user` (Admin may override) |
 | Venue and schedule management | `events.venue_id`, `start_time`, `end_time` with an overlap check per venue |
+| Optional participant limit | If `max_participants` is set, count of `REGISTERED` rows must be below it (checked inside a transaction) |
 | Certificates only for eligible participants | Issue requires `certificate_eligible = true` and a non-cancelled registration |
 
-Schedules are stored directly on the event (start and end time) to keep the prototype simple. If multi-session events are needed later, add an `event_sessions` table linked to `events`.
+Schedules are stored directly on the event as a single start and end date/time, which the team confirmed is sufficient. If multi-session events are ever needed, an `event_sessions` table can be added.
+
+**Withdrawal handling:** withdrawing sets the registration status to `CANCELLED` (the row is kept). If the student registers again, the same row is set back to `REGISTERED`, so the unique constraint is never violated. Only `REGISTERED` rows count toward the participant limit.
 
 ## 7. REST API Design
 
@@ -210,18 +223,20 @@ Base path: `/api/v1`. All bodies are JSON. Protected routes require `Authorizati
 
 | Method | Endpoint | Access | Purpose |
 |---|---|---|---|
-| POST | `/auth/register` | Public | Create a student account |
+| POST | `/auth/register` | Public | Create a **Student** account (name, college email, college ID number, department, password). Role cannot be supplied |
 | POST | `/auth/login` | Public | Log in, receive JWT |
 | GET | `/auth/me` | Authenticated | Current user profile |
+| GET | `/users` | Admin | List users (search/filter by role) |
+| PATCH | `/users/:id/role` | Admin | Assign or change a user's role (STUDENT, ORGANIZER, ADMIN) |
 | GET | `/events` | Public | List published events (filter by date, status, search) |
 | GET | `/events/:id` | Public | Event details with venue and schedule |
 | POST | `/events` | Organizer, Admin | Create event |
 | PUT | `/events/:id` | Owner Organizer, Admin | Update event, schedule or venue |
 | POST | `/events/:id/cancel` | Owner Organizer, Admin | Cancel event with reason |
 | GET | `/venues` | Organizer, Admin | List venues |
-| POST | `/venues` | Admin (or Organizer) | Add venue |
+| POST | `/venues` | Admin | Add venue |
 | POST | `/events/:id/registrations` | Student | Register for an event |
-| DELETE | `/events/:id/registrations/me` | Student | Withdraw own registration (optional) |
+| DELETE | `/events/:id/registrations/me` | Student | Withdraw own registration |
 | GET | `/registrations/me` | Student | View own registrations and status |
 | GET | `/events/:id/participants` | Owner Organizer, Admin | Participant list |
 | PATCH | `/events/:id/participants/:regId` | Owner Organizer, Admin | Mark certificate eligibility |
@@ -237,16 +252,40 @@ Standard error format:
 
 | HTTP code | Typical use |
 |---|---|
-| 400 | Validation failure |
+| 400 | Validation failure (including invalid college email or ID number) |
 | 401 | Missing or invalid token |
 | 403 | Role or ownership violation |
 | 404 | Resource not found |
-| 409 | Duplicate registration, venue clash, event full |
+| 409 | Duplicate registration, duplicate email/ID, venue clash, event full |
 | 500 | Unexpected server error |
 
 ## 8. Key Workflows
 
-### 8.1 Student Registers for an Event
+### 8.1 Student Account Creation and Role Assignment
+
+```mermaid
+sequenceDiagram
+    actor S as New User
+    actor AD as Administrator
+    participant UI as React SPA
+    participant API as Express API
+    participant DB as PostgreSQL
+
+    S->>UI: Fill sign-up form (college email, ID number, name, password)
+    UI->>API: POST /auth/register
+    API->>API: Validate email domain and ID format, drop any role field
+    API->>DB: INSERT user with role = STUDENT
+    API-->>UI: 201 Created
+    Note over S,DB: Account is always a Student at this point
+
+    AD->>API: PATCH /users/:id/role (ORGANIZER)
+    API->>API: Verify JWT and ADMIN role
+    API->>DB: UPDATE user role
+    API-->>AD: 200 OK
+    Note over S,DB: Role change applies on the user's next request
+```
+
+### 8.2 Student Registers for an Event
 
 ```mermaid
 sequenceDiagram
@@ -261,7 +300,7 @@ sequenceDiagram
     API->>API: Verify JWT and STUDENT role
     API->>SVC: register(eventId, studentId)
     SVC->>DB: Load event
-    SVC->>SVC: Check PUBLISHED, deadline, capacity
+    SVC->>SVC: Check PUBLISHED, deadline, capacity (if limit set)
     SVC->>DB: INSERT registration
     alt Already registered
         DB-->>SVC: Unique constraint violation
@@ -275,13 +314,13 @@ sequenceDiagram
     end
 ```
 
-The database constraint is the final safeguard, so two simultaneous clicks cannot create duplicates.
+The database constraint is the final safeguard, so two simultaneous clicks cannot create duplicates. Withdrawal uses `DELETE /events/:id/registrations/me`, allowed while the event is `PUBLISHED` and before the registration deadline.
 
-### 8.2 Organizer Creates and Cancels an Event
+### 8.3 Organizer Creates and Cancels an Event
 
 ```mermaid
 flowchart TD
-    A[Organizer opens Create Event] --> B[Enter title, description, date/time, venue, limit]
+    A[Organizer opens Create Event] --> B["Enter title, description, date/time, venue, optional limit"]
     B --> C{Validation and venue clash check}
     C -- fails --> B
     C -- passes --> D[Save event as PUBLISHED or DRAFT]
@@ -292,7 +331,7 @@ flowchart TD
     H --> I[Students see cancelled status in My Registrations]
 ```
 
-### 8.3 Certificate Issuance and Download
+### 8.4 Certificate Issuance and Download
 
 ```mermaid
 sequenceDiagram
@@ -320,21 +359,26 @@ sequenceDiagram
     API-->>S: PDF file
 ```
 
-### 8.4 Login and Role-Based Access
+**Certificate template (kept simple):** one A4 landscape page, modelled on a typical previous college certificate. It contains the college name, the title "Certificate of Participation", the student's name, event title, event date, certificate number, issue date, and the organizer/signatory name. Layout, college name and signatory text live in one template file, so they can be adjusted without touching the rest of the code.
+
+### 8.5 Login and Role-Based Access
 
 ```mermaid
 flowchart LR
     L[Login request] --> V{Credentials valid?}
     V -- no --> E[401 Unauthorized]
-    V -- yes --> T[Issue JWT with user id and role]
+    V -- yes --> T[Issue JWT with user id]
     T --> C[Client stores token]
     C --> R[Request protected endpoint]
     R --> M{Token valid?}
     M -- no --> E
-    M -- yes --> P{Role and ownership allowed?}
+    M -- yes --> U[Load current role from database]
+    U --> P{Role and ownership allowed?}
     P -- no --> F[403 Forbidden]
     P -- yes --> OK[Process request]
 ```
+
+The role is read from the database on each protected request, so a role change or demotion by an Administrator takes effect immediately instead of waiting for the token to expire.
 
 ## 9. Event Lifecycle
 
@@ -350,7 +394,7 @@ stateDiagram-v2
     CANCELLED --> [*]
 ```
 
-Registrations are accepted only while the event is `PUBLISHED` and before the registration deadline. Certificates can be issued only for `COMPLETED` (or past-end-time) events.
+Registrations are accepted only while the event is `PUBLISHED`, before the registration deadline, and (if a limit is set) while seats remain. Certificates can be issued only for `COMPLETED` (or past-end-time) events.
 
 ## 10. Security Design
 
@@ -359,6 +403,9 @@ Registrations are accepted only while the event is `PUBLISHED` and before the re
 | Passwords | Hashed with bcrypt, never stored or logged in plain text |
 | Authentication | Short-lived JWT; secret kept in environment variables |
 | Authorization | RBAC middleware plus ownership checks in services |
+| **Privilege escalation** | Registration always creates a Student. The `role` field is not accepted from clients on sign-up or profile updates (validation schema rejects it). Only `PATCH /users/:id/role`, restricted to Admins, can change roles |
+| **Role changes** | Admin-only; an Admin cannot demote themselves, and the last Admin cannot be removed. The first Admin account is created by a database seed script |
+| Sign-up control | Email must belong to the allowed college domain; college ID number must match the college format and be unique |
 | Input safety | Schema validation on all inputs; parameterized queries through the ORM prevent SQL injection |
 | XSS | React escapes output by default; sanitize any rich-text description |
 | Transport | HTTPS in any deployed environment |
@@ -366,6 +413,8 @@ Registrations are accepted only while the event is `PUBLISHED` and before the re
 | Certificate privacy | Download endpoint checks ownership; files not served from a public folder |
 | Abuse | Rate limiting on login and registration endpoints |
 | Secrets | `.env` files excluded from Git |
+
+Email verification (confirmation link) is not included, to keep the prototype simple. It can be added later through a notification module if needed.
 
 ## 11. Non-Functional Considerations
 
@@ -385,13 +434,13 @@ flowchart LR
     B[Browser] -- HTTPS --> W[Static Hosting / Web Server - React build]
     B -- HTTPS /api --> N[Node.js + Express App]
     N --> P[(PostgreSQL)]
-    N --> F[(Certificate Storage)]
+    N --> F[(Certificate Storage - local disk)]
 ```
 
 | Environment | Setup |
 |---|---|
 | Local development | Frontend dev server, API on localhost, local PostgreSQL (optionally via Docker Compose) |
-| Demo / prototype | Single host or free-tier cloud: static frontend, one API instance, managed PostgreSQL |
+| Demo / prototype | Single host or free-tier cloud: static frontend, one API instance, PostgreSQL, certificates on the server's disk |
 
 ## 13. Suggested Project Structure
 
@@ -399,22 +448,23 @@ flowchart LR
 college-event-system/
 ├── client/                     # React SPA
 │   └── src/
-│       ├── pages/              # Events, EventDetail, MyRegistrations, Certificates, Organizer/*
+│       ├── pages/              # Events, EventDetail, MyRegistrations, Certificates, Organizer/*, Admin/*
 │       ├── components/
 │       ├── context/            # AuthContext
 │       ├── services/           # API client
 │       └── routes/             # Route guards
 ├── server/
-│   ├── prisma/                 # schema.prisma, migrations, seed
+│   ├── prisma/                 # schema.prisma, migrations, seed (first Admin)
 │   └── src/
 │       ├── modules/
 │       │   ├── auth/
+│       │   ├── users/
 │       │   ├── events/
 │       │   ├── venues/
 │       │   ├── registrations/
 │       │   └── certificates/
 │       ├── middleware/         # auth, rbac, validate, errorHandler
-│       ├── utils/              # certificate PDF generator
+│       ├── utils/              # certificate PDF generator and template
 │       └── app.js
 ├── tests/
 ├── docs/                       # Requirements, design, WBS, Gantt, risk register
@@ -435,6 +485,8 @@ college-event-system/
 | Issue certificates to eligible participants | Certificates module, eligibility flag, PDF generator |
 | Students view and download certificates | `GET /certificates/me`, `GET /certificates/:id/download` |
 | Login where required | Auth module, JWT, RBAC |
+| Student account creation | `POST /auth/register` with college email and college ID number |
+| Organizer/Admin role control | Users module, `PATCH /users/:id/role` (Admin only) |
 | Test student and organizer workflows | Jest/Supertest API tests, UI tests |
 
 ## 15. Out of Scope (Not Designed)
@@ -446,19 +498,24 @@ Consistent with Section 3.2 of the project plan, the architecture intentionally 
 - AI-based event recommendations
 - Dedicated mobile applications
 - External SMS notifications
+- Multi-session event schedules
+- Email verification of new accounts
 
 Extension points exist for later work (for example, a notification module behind the service layer), but none are part of this design.
 
-## 16. Assumptions and Open Items for Team Review
+## 16. Final Decisions Log
 
-| # | Item | Suggested decision owner |
+All items raised during review are now closed.
+
+| # | Item | Decision |
 |---|---|---|
-| 1 | Confirm the technology stack (React, Node/Express, PostgreSQL) | Development and Design |
-| 2 | Decide whether the Administrator role is implemented | Requirements |
-| 3 | Decide whether events have a participant limit and whether students may withdraw | Requirements |
-| 4 | Decide whether students self-register accounts or are pre-loaded | Requirements |
-| 5 | Confirm that single date/time per event is enough, versus multi-session schedules | Design |
-| 6 | Define certificate template content (college name, signatory, layout) | Design |
-| 7 | Confirm certificate storage (local disk vs. cloud bucket) | Development |
+| 1 | Technology stack | **Confirmed**: React, Node/Express, PostgreSQL, Prisma. Alternatives may be discussed during development if clearly more suitable |
+| 2 | Administrator role | **Implemented** as one of the three roles |
+| 3 | Participant limit and withdrawal | **Both included** (limit is optional per event; students can withdraw before the deadline) |
+| 4 | Student accounts | **Self-registration** using college Gmail address and college ID card number; always created as Student |
+| 5 | Event schedule | **Single date/time** per event is sufficient |
+| 6 | Certificate template | Simple template based on a typical previous college certificate; no specific design required |
+| 7 | Certificate storage | **Local disk** (simplest option for a small-scale project) |
+| 8 | Role management (reviewer suggestion) | New accounts default to Student; clients cannot assign roles through the API; Organizer and Admin roles are assigned only by an Administrator |
 
-This architecture is a working proposal and should be updated whenever the team agrees changes to scope, design, or implementation.
+This document is the approved baseline for development. Any later change to scope, design, or technology should be agreed by the team and recorded here.
