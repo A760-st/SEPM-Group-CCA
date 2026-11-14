@@ -1,0 +1,20 @@
+{
+  "name": "sepm-group-cca",
+  "version": "1.0.0",
+  "private": true,
+  "description": "College Event Management System - SEPM Project",
+  "scripts": {
+    "dev": "npm run dev --prefix client",
+    "build": "npm run build --prefix client",
+    "preview": "npm run preview --prefix client",
+    "client:dev": "npm run dev --prefix client",
+    "client:build": "npm run build --prefix client"
+  },
+  "keywords": [
+    "sepm",
+    "college-event-management",
+    "react",
+    "vite",
+    "tailwind"
+  ]
+}
