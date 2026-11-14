@@ -1,0 +1,105 @@
+@startuml
+skinparam dpi 300
+skinparam backgroundColor white
+skinparam defaultFontName Liberation Sans
+skinparam defaultFontSize 13
+skinparam shadowing false
+skinparam ParticipantPadding 18
+skinparam BoxPadding 10
+skinparam maxMessageSize 230
+skinparam sequenceMessageAlign center
+skinparam ArrowColor #1F2A44
+skinparam ActorBorderColor #1F2A44
+skinparam ActorBackgroundColor #DCE9F7
+skinparam ParticipantBorderColor #1F2A44
+skinparam ParticipantBackgroundColor #DCE9F7
+skinparam DatabaseBorderColor #1F2A44
+skinparam DatabaseBackgroundColor #E0EEDC
+skinparam SequenceLifeLineBorderColor #6B7894
+skinparam SequenceLifeLineBackgroundColor #FDEFC8
+skinparam SequenceGroupBorderColor #1F2A44
+skinparam SequenceGroupBackgroundColor #F4F6FA
+skinparam SequenceGroupHeaderFontStyle bold
+skinparam SequenceDividerBackgroundColor #EEF2F8
+skinparam NoteBackgroundColor #FFF8DC
+skinparam NoteBorderColor #8F9BB3
+skinparam titleFontSize 20
+skinparam titleFontStyle bold
+title Sequence Diagram 5 – Certificate Generation and Download (College Event Management System)
+autonumber
+actor "Organizer / Administrator" as OA
+actor "Student" as S
+participant "React Frontend" as FE
+participant "Express Backend" as BE
+participant "Authentication Service" as AS
+participant "Certificate Service" as CS
+database "PostgreSQL Database" as DB
+
+== Certificate issuance ==
+OA -> FE : Initiate certificate issuance for a registration
+FE -> BE : Issue certificate request (registration ID, JWT)
+activate BE
+BE -> AS : Verify JWT and authorization
+activate AS
+AS --> BE : User ID and role
+deactivate AS
+alt Unauthorized user
+  BE --> FE : 403 Forbidden
+  FE --> OA : Show access denied
+else Authorized (ORGANIZER / ADMIN)
+  BE -> DB : Retrieve registration (REGISTRATIONS)
+  activate DB
+  DB --> BE : Registration data
+  BE -> DB : Check existing certificate for registration (CERTIFICATES)
+  DB --> BE : Existing certificate (if any)
+  deactivate DB
+  alt Registration is cancelled
+    BE --> FE : 409 Registration cancelled
+    FE --> OA : Show "registration cancelled"
+  else Ineligible participant
+    BE --> FE : 422 Not eligible
+    FE --> OA : Show "participant not eligible"
+  else Certificate already issued
+    BE --> FE : 409 Already issued
+    FE --> OA : Show "certificate already issued"
+  else Eligible with valid registration
+    BE -> CS : Generate certificate document
+    activate CS
+    CS -> CS : Assign unique certificate number
+    CS --> BE : Certificate file and number
+    deactivate CS
+    BE -> DB : Store certificate details and issuing user ID (CERTIFICATES)
+    activate DB
+    DB --> BE : Certificate stored
+    deactivate DB
+    BE --> FE : 201 Issuance confirmation
+    FE --> OA : Display certificate issued
+  end
+end
+deactivate BE
+
+== Certificate download ==
+S -> FE : Request certificate download
+FE -> BE : Download request (certificate ID, JWT)
+activate BE
+BE -> AS : Verify JWT
+activate AS
+AS --> BE : User ID and role
+deactivate AS
+BE -> DB : Retrieve certificate and owning registration (CERTIFICATES, REGISTRATIONS)
+activate DB
+DB --> BE : Certificate record
+deactivate DB
+alt Unauthorized download request
+  BE --> FE : 403 Forbidden
+  FE --> S : Show access denied
+else Owner or authorized user
+  BE -> CS : Retrieve certificate file
+  activate CS
+  CS --> BE : Certificate file
+  deactivate CS
+  BE --> FE : 200 Certificate file
+  FE --> S : Provide certificate for download
+end
+deactivate BE
+@enduml

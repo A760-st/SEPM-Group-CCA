@@ -1,0 +1,119 @@
+@startuml
+skinparam dpi 300
+skinparam backgroundColor white
+skinparam defaultFontName Liberation Sans
+skinparam defaultFontSize 13
+skinparam shadowing false
+skinparam ParticipantPadding 18
+skinparam BoxPadding 10
+skinparam maxMessageSize 230
+skinparam sequenceMessageAlign center
+skinparam ArrowColor #1F2A44
+skinparam ActorBorderColor #1F2A44
+skinparam ActorBackgroundColor #DCE9F7
+skinparam ParticipantBorderColor #1F2A44
+skinparam ParticipantBackgroundColor #DCE9F7
+skinparam DatabaseBorderColor #1F2A44
+skinparam DatabaseBackgroundColor #E0EEDC
+skinparam SequenceLifeLineBorderColor #6B7894
+skinparam SequenceLifeLineBackgroundColor #FDEFC8
+skinparam SequenceGroupBorderColor #1F2A44
+skinparam SequenceGroupBackgroundColor #F4F6FA
+skinparam SequenceGroupHeaderFontStyle bold
+skinparam SequenceDividerBackgroundColor #EEF2F8
+skinparam NoteBackgroundColor #FFF8DC
+skinparam NoteBorderColor #8F9BB3
+skinparam titleFontSize 20
+skinparam titleFontStyle bold
+title Sequence Diagram 2 – Event Creation and Publication (College Event Management System)
+autonumber
+actor "Organizer" as O
+participant "React Frontend" as FE
+participant "Express Backend" as BE
+participant "Authentication Service" as AS
+database "PostgreSQL Database" as DB
+
+== Login ==
+O -> FE : Enter login credentials
+FE -> BE : Login request
+activate BE
+BE -> AS : Verify credentials
+activate AS
+AS --> BE : Verified + JWT
+deactivate AS
+BE --> FE : Authentication result + JWT
+deactivate BE
+FE --> O : Login successful
+
+== Event creation ==
+O -> FE : Open event creation page
+FE --> O : Display event form
+O -> FE : Submit event details
+FE -> BE : Create event request (event details, JWT)
+activate BE
+BE -> AS : Verify JWT and organizer permissions
+activate AS
+AS --> BE : Identity and role
+deactivate AS
+alt Unauthorized user
+  BE --> FE : 403 Forbidden
+  FE --> O : Show access denied
+else Authorized (ORGANIZER / ADMIN)
+  BE -> BE : Validate event information (Zod)
+  alt Invalid event details
+    BE --> FE : 400 Validation error
+    FE --> O : Show field errors
+  else Valid details
+    BE -> DB : Retrieve venue details (VENUES)
+    activate DB
+    DB --> BE : Venue (capacity)
+    BE -> DB : Find overlapping events at venue (EVENTS)
+    DB --> BE : Conflicting events (if any)
+    deactivate DB
+    BE -> BE : Check venue capacity and scheduling conflict
+    alt Venue scheduling conflict or capacity exceeded
+      BE --> FE : 409 Venue conflict
+      FE --> O : Show conflict message
+    else Venue available
+      BE -> DB : Create event record (status = DRAFT) (EVENTS)
+      activate DB
+      DB --> BE : Event created
+      deactivate DB
+      BE --> FE : 201 Event created
+      FE --> O : Display event for review
+    end
+  end
+end
+deactivate BE
+
+== Review and publication ==
+O -> FE : Review event details
+O -> FE : Publish event
+FE -> BE : Publish request (event ID, JWT)
+activate BE
+BE -> AS : Verify JWT and organizer permissions
+activate AS
+AS --> BE : Identity and role
+deactivate AS
+alt Unauthorized user
+  BE --> FE : 403 Forbidden
+  FE --> O : Show access denied
+else Authorized
+  BE -> DB : Re-check venue scheduling conflicts (EVENTS)
+  activate DB
+  DB --> BE : Conflicting events (if any)
+  deactivate DB
+  alt Venue scheduling conflict
+    BE --> FE : 409 Venue conflict
+    FE --> O : Show conflict message
+  else No conflict
+    BE -> DB : Update event status to PUBLISHED (EVENTS)
+    activate DB
+    DB --> BE : Event updated
+    deactivate DB
+    BE --> FE : 200 Event published
+    FE --> O : Display publication confirmation
+  end
+end
+deactivate BE
+@enduml

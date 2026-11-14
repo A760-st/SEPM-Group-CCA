@@ -1,0 +1,105 @@
+@startuml
+skinparam dpi 300
+skinparam backgroundColor white
+skinparam defaultFontName Liberation Sans
+skinparam defaultFontSize 13
+skinparam shadowing false
+skinparam ParticipantPadding 18
+skinparam BoxPadding 10
+skinparam maxMessageSize 230
+skinparam sequenceMessageAlign center
+skinparam ArrowColor #1F2A44
+skinparam ActorBorderColor #1F2A44
+skinparam ActorBackgroundColor #DCE9F7
+skinparam ParticipantBorderColor #1F2A44
+skinparam ParticipantBackgroundColor #DCE9F7
+skinparam DatabaseBorderColor #1F2A44
+skinparam DatabaseBackgroundColor #E0EEDC
+skinparam SequenceLifeLineBorderColor #6B7894
+skinparam SequenceLifeLineBackgroundColor #FDEFC8
+skinparam SequenceGroupBorderColor #1F2A44
+skinparam SequenceGroupBackgroundColor #F4F6FA
+skinparam SequenceGroupHeaderFontStyle bold
+skinparam SequenceDividerBackgroundColor #EEF2F8
+skinparam NoteBackgroundColor #FFF8DC
+skinparam NoteBorderColor #8F9BB3
+skinparam titleFontSize 20
+skinparam titleFontStyle bold
+title Sequence Diagram 6 – Administrator User and Role Management (College Event Management System)
+autonumber
+actor "Administrator" as A
+participant "React Frontend" as FE
+participant "Express Backend" as BE
+participant "Authentication Service" as AS
+database "PostgreSQL Database" as DB
+
+== Login ==
+A -> FE : Enter login credentials
+FE -> BE : Login request
+activate BE
+BE -> AS : Verify credentials
+activate AS
+AS --> BE : Verified + JWT
+deactivate AS
+BE --> FE : Authentication result + JWT
+deactivate BE
+FE --> A : Login successful
+
+== View users ==
+A -> FE : Open user management
+FE -> BE : Request user records (JWT)
+activate BE
+BE -> AS : Verify JWT and administrator permissions
+activate AS
+AS --> BE : Identity and role
+deactivate AS
+alt Unauthorized access
+  BE --> FE : 403 Forbidden
+  FE --> A : Show access denied
+else Administrator
+  BE -> DB : Retrieve user records (USERS)
+  activate DB
+  DB --> BE : User list
+  deactivate DB
+  BE --> FE : User records
+  FE --> A : Display users
+end
+deactivate BE
+
+== Role change ==
+A -> FE : Select a user
+A -> FE : Request role change (new role)
+FE -> BE : Role change request (user ID, role, JWT)
+activate BE
+BE -> AS : Verify JWT and administrator permissions
+activate AS
+AS --> BE : Identity and role
+deactivate AS
+alt Unauthorized access
+  BE --> FE : 403 Forbidden
+  FE --> A : Show access denied
+else Administrator
+  BE -> BE : Validate role (STUDENT, ORGANIZER, ADMIN)
+  alt Invalid role
+    BE --> FE : 400 Invalid role
+    FE --> A : Show validation error
+  else Valid role
+    BE -> DB : Find user by ID (USERS)
+    activate DB
+    DB --> BE : User record (or none)
+    deactivate DB
+    alt User not found
+      BE --> FE : 404 User not found
+      FE --> A : Show "user not found"
+    else User exists
+      BE -> DB : Update user role (USERS)
+      activate DB
+      DB --> BE : Role updated
+      deactivate DB
+      BE --> FE : 200 Confirmation
+      FE --> A : Display updated user role
+    end
+  end
+end
+deactivate BE
+@enduml

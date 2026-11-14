@@ -1,0 +1,99 @@
+@startuml
+skinparam dpi 300
+skinparam backgroundColor white
+skinparam defaultFontName Liberation Sans
+skinparam defaultFontSize 13
+skinparam shadowing false
+skinparam ParticipantPadding 18
+skinparam BoxPadding 10
+skinparam maxMessageSize 230
+skinparam sequenceMessageAlign center
+skinparam ArrowColor #1F2A44
+skinparam ActorBorderColor #1F2A44
+skinparam ActorBackgroundColor #DCE9F7
+skinparam ParticipantBorderColor #1F2A44
+skinparam ParticipantBackgroundColor #DCE9F7
+skinparam DatabaseBorderColor #1F2A44
+skinparam DatabaseBackgroundColor #E0EEDC
+skinparam SequenceLifeLineBorderColor #6B7894
+skinparam SequenceLifeLineBackgroundColor #FDEFC8
+skinparam SequenceGroupBorderColor #1F2A44
+skinparam SequenceGroupBackgroundColor #F4F6FA
+skinparam SequenceGroupHeaderFontStyle bold
+skinparam SequenceDividerBackgroundColor #EEF2F8
+skinparam NoteBackgroundColor #FFF8DC
+skinparam NoteBorderColor #8F9BB3
+skinparam titleFontSize 20
+skinparam titleFontStyle bold
+title Sequence Diagram 1 – User Registration and Login (College Event Management System)
+autonumber
+actor "Student" as S
+participant "React Frontend" as FE
+participant "Express Backend" as BE
+participant "Authentication Service" as AS
+database "PostgreSQL Database" as DB
+
+== Registration ==
+S -> FE : Open registration page
+FE --> S : Display registration form
+S -> FE : Submit registration details
+FE -> BE : Registration request (name, email, student ID, password)
+activate BE
+BE -> BE : Validate input (Zod)
+alt Missing or invalid input
+  BE --> FE : 400 Validation error
+  FE --> S : Show field errors
+else Input valid
+  BE -> DB : Check email and student ID uniqueness (USERS)
+  activate DB
+  DB --> BE : Matching records
+  deactivate DB
+  alt Duplicate email or student ID
+    BE --> FE : 409 Duplicate account
+    FE --> S : Show "email or student ID already registered"
+  else Unique
+    BE -> AS : Hash password
+    activate AS
+    AS -> AS : bcrypt hash
+    AS --> BE : Password hash
+    deactivate AS
+    BE -> DB : Create user record (role = STUDENT, hashed password)
+    activate DB
+    DB --> BE : User created
+    deactivate DB
+    BE --> FE : 201 Registration confirmation
+    FE --> S : Registration successful
+  end
+end
+deactivate BE
+
+== Login ==
+S -> FE : Enter login credentials
+FE -> BE : Login request (email, password)
+activate BE
+BE -> BE : Validate input (Zod)
+alt Missing or invalid input
+  BE --> FE : 400 Validation error
+  FE --> S : Show field errors
+else Input valid
+  BE -> DB : Retrieve user record by email (USERS)
+  activate DB
+  DB --> BE : User record (or none)
+  deactivate DB
+  BE -> AS : Verify password against stored hash
+  activate AS
+  AS -> AS : bcrypt compare
+  alt Invalid credentials
+    AS --> BE : Verification failed
+    BE --> FE : 401 Invalid credentials
+    FE --> S : Show login error
+  else Credentials valid
+    AS -> AS : Generate JWT (user ID, role)
+    AS --> BE : Verification success + JWT
+    deactivate AS
+    BE --> FE : 200 Authentication result + JWT
+    FE --> S : Login successful (token stored)
+  end
+end
+deactivate BE
+@enduml

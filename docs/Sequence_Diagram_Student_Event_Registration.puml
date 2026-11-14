@@ -1,0 +1,103 @@
+@startuml
+skinparam dpi 300
+skinparam backgroundColor white
+skinparam defaultFontName Liberation Sans
+skinparam defaultFontSize 13
+skinparam shadowing false
+skinparam ParticipantPadding 18
+skinparam BoxPadding 10
+skinparam maxMessageSize 230
+skinparam sequenceMessageAlign center
+skinparam ArrowColor #1F2A44
+skinparam ActorBorderColor #1F2A44
+skinparam ActorBackgroundColor #DCE9F7
+skinparam ParticipantBorderColor #1F2A44
+skinparam ParticipantBackgroundColor #DCE9F7
+skinparam DatabaseBorderColor #1F2A44
+skinparam DatabaseBackgroundColor #E0EEDC
+skinparam SequenceLifeLineBorderColor #6B7894
+skinparam SequenceLifeLineBackgroundColor #FDEFC8
+skinparam SequenceGroupBorderColor #1F2A44
+skinparam SequenceGroupBackgroundColor #F4F6FA
+skinparam SequenceGroupHeaderFontStyle bold
+skinparam SequenceDividerBackgroundColor #EEF2F8
+skinparam NoteBackgroundColor #FFF8DC
+skinparam NoteBorderColor #8F9BB3
+skinparam titleFontSize 20
+skinparam titleFontStyle bold
+title Sequence Diagram 3 – Student Event Registration (College Event Management System)
+autonumber
+actor "Student" as S
+participant "React Frontend" as FE
+participant "Express Backend" as BE
+participant "Authentication Service" as AS
+database "PostgreSQL Database" as DB
+
+== Login ==
+S -> FE : Enter login credentials
+FE -> BE : Login request
+activate BE
+BE -> AS : Verify credentials
+activate AS
+AS --> BE : Verified + JWT
+deactivate AS
+BE --> FE : Authentication result + JWT
+deactivate BE
+FE --> S : Login successful
+
+== Browse published events ==
+S -> FE : View published events
+FE -> BE : Request available events (JWT)
+activate BE
+BE -> DB : Retrieve events with status PUBLISHED (EVENTS)
+activate DB
+DB --> BE : Event list
+deactivate DB
+BE --> FE : Event information
+deactivate BE
+FE --> S : Display available events
+
+== Registration ==
+S -> FE : Select an event
+S -> FE : Submit registration request
+FE -> BE : Registration request (event ID, JWT)
+activate BE
+BE -> AS : Verify JWT and student identity
+activate AS
+AS --> BE : Student ID and role
+deactivate AS
+alt Invalid token or not a student
+  BE --> FE : 401 / 403 Unauthorized
+  FE --> S : Show access error
+else Authenticated student
+  BE -> DB : Retrieve event status, deadline, capacity (EVENTS)
+  activate DB
+  DB --> BE : Event data
+  BE -> DB : Check existing registration for student and event (REGISTRATIONS)
+  DB --> BE : Existing registration (if any)
+  BE -> DB : Count active registrations for event (REGISTRATIONS)
+  DB --> BE : Participant count
+  deactivate DB
+  alt Event cancelled or unpublished
+    BE --> FE : 409 Event not open
+    FE --> S : Show "event unavailable"
+  else Registration deadline passed
+    BE --> FE : 409 Deadline passed
+    FE --> S : Show "registration closed"
+  else Duplicate registration
+    BE --> FE : 409 Already registered
+    FE --> S : Show "already registered"
+  else Event capacity reached
+    BE --> FE : 409 Event full
+    FE --> S : Show "event full"
+  else All checks passed
+    BE -> DB : Create registration record (REGISTRATIONS)
+    activate DB
+    DB --> BE : Registration created
+    deactivate DB
+    BE --> FE : 201 Registration confirmation
+    FE --> S : Display successful registration
+  end
+end
+deactivate BE
+@enduml

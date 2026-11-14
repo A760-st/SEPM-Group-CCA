@@ -1,0 +1,83 @@
+@startuml
+skinparam dpi 300
+skinparam backgroundColor white
+skinparam defaultFontName Liberation Sans
+skinparam defaultFontSize 13
+skinparam shadowing false
+skinparam ParticipantPadding 18
+skinparam BoxPadding 10
+skinparam maxMessageSize 230
+skinparam sequenceMessageAlign center
+skinparam ArrowColor #1F2A44
+skinparam ActorBorderColor #1F2A44
+skinparam ActorBackgroundColor #DCE9F7
+skinparam ParticipantBorderColor #1F2A44
+skinparam ParticipantBackgroundColor #DCE9F7
+skinparam DatabaseBorderColor #1F2A44
+skinparam DatabaseBackgroundColor #E0EEDC
+skinparam SequenceLifeLineBorderColor #6B7894
+skinparam SequenceLifeLineBackgroundColor #FDEFC8
+skinparam SequenceGroupBorderColor #1F2A44
+skinparam SequenceGroupBackgroundColor #F4F6FA
+skinparam SequenceGroupHeaderFontStyle bold
+skinparam SequenceDividerBackgroundColor #EEF2F8
+skinparam NoteBackgroundColor #FFF8DC
+skinparam NoteBorderColor #8F9BB3
+skinparam titleFontSize 20
+skinparam titleFontStyle bold
+title Sequence Diagram 4 – Event Registration Cancellation (College Event Management System)
+autonumber
+actor "Student" as S
+participant "React Frontend" as FE
+participant "Express Backend" as BE
+participant "Authentication Service" as AS
+database "PostgreSQL Database" as DB
+
+== View registrations ==
+S -> FE : Open registered events
+FE -> BE : Request registration details (JWT)
+activate BE
+BE -> AS : Verify JWT
+activate AS
+AS --> BE : Student identity
+deactivate AS
+BE -> DB : Retrieve student's registrations with events (REGISTRATIONS, EVENTS)
+activate DB
+DB --> BE : Registration list
+deactivate DB
+BE --> FE : Registration details
+deactivate BE
+FE --> S : Display registered events
+
+== Cancellation ==
+S -> FE : Select a registration to cancel
+FE -> BE : Cancellation request (registration ID, JWT)
+activate BE
+BE -> AS : Verify JWT
+activate AS
+AS --> BE : Student identity
+deactivate AS
+BE -> DB : Retrieve registration and event deadline (REGISTRATIONS, EVENTS)
+activate DB
+DB --> BE : Registration data
+deactivate DB
+BE -> BE : Verify ownership, status and deadline
+alt Registration does not belong to the student
+  BE --> FE : 403 Forbidden
+  FE --> S : Show access error
+else Registration is already cancelled
+  BE --> FE : 409 Already cancelled
+  FE --> S : Show "already cancelled"
+else Cancellation deadline has passed
+  BE --> FE : 409 Deadline passed
+  FE --> S : Show "cancellation not allowed"
+else Eligible for cancellation
+  BE -> DB : Update registration status to CANCELLED (REGISTRATIONS)
+  activate DB
+  DB --> BE : Updated record stored
+  deactivate DB
+  BE --> FE : 200 Cancellation confirmation
+  FE --> S : Display updated registration status
+end
+deactivate BE
+@enduml
