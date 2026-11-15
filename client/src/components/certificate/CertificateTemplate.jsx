@@ -345,8 +345,8 @@ const CertificateTemplate = forwardRef(function CertificateTemplate(
                 </span>
                 
                 {/* Shield / Institutional Monogram */}
-                <div className="w-[28px] h-[28px] my-0.5 rounded-full bg-[#0A2540] text-amber-300 flex items-center justify-center shadow-inner font-serif font-black text-[13px]">
-                  A
+                <div className="w-[28px] h-[28px] my-0.5 rounded-full bg-[#0A2540] text-amber-300 flex items-center justify-center shadow-inner font-serif font-black text-[10px] tracking-tighter">
+                  BMS
                 </div>
 
                 <span className="text-[7.5px] font-sans font-extrabold uppercase tracking-widest text-[#8A6508]">

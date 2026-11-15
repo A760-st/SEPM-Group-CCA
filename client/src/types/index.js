@@ -53,8 +53,8 @@ export const EVENT_CATEGORIES = [
 
 // College Configuration Default Fallbacks
 export const COLLEGE_CONFIG = {
-  name: import.meta.env.VITE_COLLEGE_NAME || 'Apex Institute of Technology',
-  shortName: import.meta.env.VITE_COLLEGE_SHORT_NAME || 'AIT',
-  supportEmail: import.meta.env.VITE_SUPPORT_EMAIL || 'events-support@apex.edu',
+  name: import.meta.env.VITE_COLLEGE_NAME || 'BMS Institute of Technology and Management',
+  shortName: import.meta.env.VITE_COLLEGE_SHORT_NAME || 'BMSITM',
+  supportEmail: import.meta.env.VITE_SUPPORT_EMAIL || 'events@bmsit.in',
   academicYear: '2026-2027',
 };

@@ -14,7 +14,7 @@ import {
   INITIAL_NOTIFICATIONS,
 } from './mockData';
 
-const STORAGE_KEY = 'sepm_college_events_mock_db_v1';
+const STORAGE_KEY = 'sepm_bmsitm_events_mock_db_v2';
 
 class MockBackend {
   constructor() {
@@ -746,7 +746,7 @@ class MockBackend {
     }
 
     const certYear = new Date().getFullYear();
-    const certNum = `AIT-CERT-${certYear}-${Math.floor(1000 + Math.random() * 9000)}`;
+    const certNum = `BMS-CERT-${certYear}-${Math.floor(1000 + Math.random() * 9000)}`;
     const newCert = {
       id: `c-${Date.now()}`,
       registration_id: registrationId,

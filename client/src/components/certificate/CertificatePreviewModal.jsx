@@ -69,15 +69,20 @@ export default function CertificatePreviewModal({
       await downloadCertificateAsPdf(certRef.current, fileName);
       setFeedback({
         type: 'success',
-        message: `Certificate ${fileName} downloaded successfully in high-definition A4 PDF!`,
+        message: `Certificate ${fileName} generated & downloaded successfully in high-definition A4 PDF!`,
       });
       if (onDownloadSuccess) onDownloadSuccess(certificate);
     } catch (err) {
       console.error('PDF Download failed:', err);
-      setFeedback({
-        type: 'error',
-        message: 'Could not render high-resolution PDF. Please try the Print option.',
-      });
+      // Fallback: trigger print dialog directly if browser blocks canvas
+      try {
+        window.print();
+      } catch (printErr) {
+        setFeedback({
+          type: 'error',
+          message: 'Could not generate PDF. Please use the Print option.',
+        });
+      }
     } finally {
       setDownloading(false);
     }

@@ -67,13 +67,13 @@ export default function LoginPage() {
   const fillDemoCredentials = (role) => {
     setFormError('');
     if (role === ROLES.STUDENT) {
-      setEmail('student@apex.edu');
+      setEmail('student@bmsit.in');
       setPassword('student123');
     } else if (role === ROLES.ORGANIZER) {
-      setEmail('organizer@apex.edu');
+      setEmail('organizer@bmsit.in');
       setPassword('organizer123');
     } else if (role === ROLES.ADMIN) {
-      setEmail('admin@apex.edu');
+      setEmail('admin@bmsit.in');
       setPassword('admin123');
     }
   };
@@ -109,7 +109,7 @@ export default function LoginPage() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="e.g. yourname@apex.edu"
+              placeholder="e.g. yourname@bmsit.in"
               autoComplete="email"
             />
 
