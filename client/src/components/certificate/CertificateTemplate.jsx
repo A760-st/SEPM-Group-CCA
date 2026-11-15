@@ -153,12 +153,12 @@ const CertificateTemplate = forwardRef(function CertificateTemplate(
       </svg>
 
       {/* Faint center watermark emblem */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.035]">
-        <svg width="460" height="460" viewBox="0 0 200 200" fill="#0A2540">
-          <path d="M100 15 L175 45 L175 105 C175 150 100 185 100 185 C100 185 25 150 25 105 L25 45 Z" />
-          <path d="M100 35 L160 60 L160 105 C160 140 100 168 100 168 C100 168 40 140 40 105 L40 60 Z" fill="#ffffff" />
-          <path d="M100 50 L145 70 L145 105 C145 130 100 152 100 152 C100 152 55 130 55 105 L55 70 Z" fill="#0A2540" />
-        </svg>
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.04]">
+        <img
+          src="/assets/bmsit-logo.png"
+          alt="Watermark"
+          className="w-[380px] h-[380px] object-contain filter grayscale"
+        />
       </div>
 
       {/* ============================================================ */}
@@ -197,13 +197,14 @@ const CertificateTemplate = forwardRef(function CertificateTemplate(
 
         {/* 1. HEADER ROW: Institution Branding */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3.5">
-            {/* Institution Crest / Monogram Emblem */}
-            <div className="w-[52px] h-[52px] rounded-lg bg-gradient-to-br from-[#0A2540] to-[#1E3A8A] flex items-center justify-center shadow-md border border-amber-400/40">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#F8FAFC" strokeWidth="1.75">
-                <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
-                <path d="M6 12v5c3 3 9 3 12 0v-5" />
-              </svg>
+          <div className="flex items-center gap-4">
+            {/* Official BMSITM Emblem Logo */}
+            <div className="w-[62px] h-[62px] flex items-center justify-center shrink-0">
+              <img
+                src="/assets/bmsit-logo.png"
+                alt="BMSITM Official Logo"
+                className="w-[62px] h-[62px] object-contain drop-shadow"
+              />
             </div>
 
             <div>
@@ -212,11 +213,11 @@ const CertificateTemplate = forwardRef(function CertificateTemplate(
                   {COLLEGE_CONFIG.name}
                 </span>
                 <span className="text-[11px] font-bold tracking-widest text-amber-700 font-sans border-l-2 border-amber-400 pl-2 uppercase">
-                  ACADEMIC EXCELLENCE
+                  AUTONOMOUS
                 </span>
               </div>
               <p className="text-[11px] text-slate-500 font-sans tracking-wide">
-                Office of Academic Affairs & Student Enrichment • {COLLEGE_CONFIG.academicYear}
+                Affiliated to VTU, Belagavi • Approved by AICTE • Accredited by NAAC with 'A+' Grade
               </p>
             </div>
           </div>

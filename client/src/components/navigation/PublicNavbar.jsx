@@ -23,8 +23,12 @@ export default function PublicNavbar() {
         <div className="flex items-center justify-between h-16">
           {/* College Logo & Portal Title */}
           <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-sm group-hover:bg-blue-700 transition">
-              <GraduationCap className="w-6 h-6" />
+            <div className="w-11 h-11 flex items-center justify-center shrink-0">
+              <img
+                src="/assets/bmsit-logo.png"
+                alt="BMSITM Logo"
+                className="w-11 h-11 object-contain drop-shadow-xs"
+              />
             </div>
             <div>
               <div className="text-base font-bold text-slate-900 leading-tight tracking-tight flex items-center gap-1.5">
@@ -33,7 +37,7 @@ export default function PublicNavbar() {
                   {COLLEGE_CONFIG.shortName}
                 </span>
               </div>
-              <p className="text-xs text-slate-500 font-normal">
+              <p className="text-xs text-slate-600 font-medium line-clamp-1">
                 {COLLEGE_CONFIG.name}
               </p>
             </div>

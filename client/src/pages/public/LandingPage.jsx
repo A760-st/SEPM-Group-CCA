@@ -67,6 +67,24 @@ export default function LandingPage() {
       <section className="relative overflow-hidden bg-slate-900 text-white py-20 px-4 sm:px-6 lg:px-8 border-b border-slate-800">
         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#3b82f6_1px,transparent_1px)] [background-size:16px_16px]" />
         <div className="relative max-w-5xl mx-auto text-center space-y-6">
+          <div className="flex items-center justify-center gap-3">
+            <div className="w-14 h-14 bg-white/10 rounded-2xl p-1.5 backdrop-blur-xs flex items-center justify-center border border-white/20">
+              <img
+                src="/assets/bmsit-logo.png"
+                alt="BMSITM Logo"
+                className="w-full h-full object-contain drop-shadow"
+              />
+            </div>
+            <div className="text-left">
+              <span className="text-xs uppercase font-extrabold tracking-widest text-amber-400 block">
+                {COLLEGE_CONFIG.shortName}
+              </span>
+              <span className="text-sm font-semibold text-slate-200">
+                {COLLEGE_CONFIG.name}
+              </span>
+            </div>
+          </div>
+
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-400/20 text-blue-400 text-xs font-medium">
             <Sparkles className="w-3.5 h-3.5" />
             <span>Official Campus Event Management Portal</span>

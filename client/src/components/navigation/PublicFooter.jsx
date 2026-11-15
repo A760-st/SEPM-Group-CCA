@@ -11,14 +11,18 @@ export default function PublicFooter() {
           {/* Col 1: Branding */}
           <div className="space-y-4 md:col-span-1">
             <div className="flex items-center gap-2.5 text-white">
-              <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white">
-                <GraduationCap className="w-5 h-5" />
+              <div className="w-9 h-9 flex items-center justify-center shrink-0">
+                <img
+                  src="/assets/bmsit-logo.png"
+                  alt="BMSITM Logo"
+                  className="w-9 h-9 object-contain"
+                />
               </div>
               <span className="font-bold text-base tracking-tight">CampusEvent</span>
             </div>
             <p className="text-xs text-slate-400 leading-relaxed">
               Official centralized event registration and certificate management portal for{' '}
-              <span className="text-slate-300 font-medium">{COLLEGE_CONFIG.name}</span>.
+              <span className="text-slate-200 font-semibold">{COLLEGE_CONFIG.name}</span>.
             </p>
             <div className="text-xs text-slate-500">
               Academic Year: <span className="text-slate-400">{COLLEGE_CONFIG.academicYear}</span>

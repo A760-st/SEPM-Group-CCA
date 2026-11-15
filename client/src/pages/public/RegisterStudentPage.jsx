@@ -92,16 +92,22 @@ export default function RegisterStudentPage() {
 
   return (
     <div className="min-h-[85vh] py-12 px-4 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-xl text-center space-y-2 mb-6">
-        <div className="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center text-white mx-auto shadow-md">
-          <GraduationCap className="w-7 h-7" />
+      <div className="sm:mx-auto sm:w-full sm:max-w-xl text-center space-y-3 mb-6">
+        <div className="w-16 h-16 mx-auto flex items-center justify-center">
+          <img
+            src="/assets/bmsit-logo.png"
+            alt="BMSITM Logo"
+            className="w-16 h-16 object-contain drop-shadow-md"
+          />
         </div>
-        <h2 className="text-2xl font-bold tracking-tight text-slate-900">
-          Student Portal Registration
-        </h2>
-        <p className="text-xs text-slate-500">
-          Create your verified student profile to register for events and obtain certificates
-        </p>
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight text-slate-900">
+            Student Portal Registration
+          </h2>
+          <p className="text-xs text-slate-600 font-medium mt-1">
+            {COLLEGE_CONFIG.name}
+          </p>
+        </div>
       </div>
 
       <div className="sm:mx-auto sm:w-full sm:max-w-xl">

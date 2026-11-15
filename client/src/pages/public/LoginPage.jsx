@@ -80,16 +80,22 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-[80vh] flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center space-y-2">
-        <div className="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center text-white mx-auto shadow-md">
-          <GraduationCap className="w-7 h-7" />
+      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center space-y-3">
+        <div className="w-16 h-16 mx-auto flex items-center justify-center">
+          <img
+            src="/assets/bmsit-logo.png"
+            alt="BMSITM Logo"
+            className="w-16 h-16 object-contain drop-shadow-md"
+          />
         </div>
-        <h2 className="text-2xl font-bold tracking-tight text-slate-900">
-          Sign In to CampusEvent
-        </h2>
-        <p className="text-xs text-slate-500">
-          Enter your institutional credentials to access your dashboard
-        </p>
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight text-slate-900">
+            Sign In to CampusEvent
+          </h2>
+          <p className="text-xs text-slate-600 font-medium mt-1">
+            {COLLEGE_CONFIG.name}
+          </p>
+        </div>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">

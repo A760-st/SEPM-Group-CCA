@@ -85,8 +85,12 @@ export default function Sidebar({ collapsed, setCollapsed }) {
       {/* Brand Header */}
       <div className="flex items-center justify-between h-16 px-4 border-b border-slate-800">
         <div className="flex items-center gap-3 overflow-hidden">
-          <div className="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center text-white shrink-0 shadow-sm">
-            <GraduationCap className="w-5 h-5" />
+          <div className="w-9 h-9 flex items-center justify-center shrink-0">
+            <img
+              src="/assets/bmsit-logo.png"
+              alt="BMSITM Logo"
+              className="w-9 h-9 object-contain"
+            />
           </div>
           {!collapsed && (
             <div className="truncate">
