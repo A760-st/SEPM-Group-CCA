@@ -16,6 +16,7 @@ import ForgotPasswordPage from '../pages/public/ForgotPasswordPage';
 import UnauthorizedPage from '../pages/public/UnauthorizedPage';
 import OrganizerRestrictedPage from '../pages/public/OrganizerRestrictedPage';
 import AdminRestrictedPage from '../pages/public/AdminRestrictedPage';
+import VerifyCertificatePage from '../pages/public/VerifyCertificatePage';
 import NotFoundPage from '../pages/public/NotFoundPage';
 
 // Student Pages
@@ -68,6 +69,10 @@ export default function AppRoutes() {
         <Route
           path="/register/admin-restricted"
           element={<AdminRestrictedPage />}
+        />
+        <Route
+          path="/verify/certificate/:certNo"
+          element={<VerifyCertificatePage />}
         />
         <Route path="/404" element={<NotFoundPage />} />
       </Route>

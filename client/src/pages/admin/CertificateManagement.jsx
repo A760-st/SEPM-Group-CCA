@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { certificateService } from '../../services/certificateService';
 import { registrationService } from '../../services/registrationService';
-import { eventService } from '../../services/eventService';
 import { useAuth } from '../../context/AuthContext';
 import { useNotifications } from '../../context/NotificationContext';
-import { formatDate, formatDateTime } from '../../utils/formatters';
+import { formatDate } from '../../utils/formatters';
 import { COLLEGE_CONFIG } from '../../types';
 import Card from '../../components/common/Card';
-import Badge from '../../components/common/Badge';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import Select from '../../components/common/Select';
@@ -15,16 +13,16 @@ import Modal from '../../components/common/Modal';
 import Pagination from '../../components/common/Pagination';
 import EmptyState from '../../components/common/EmptyState';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
+import CertificatePreviewModal from '../../components/certificate/CertificatePreviewModal';
 import {
   Award,
   Search,
   Plus,
   Eye,
   Download,
-  GraduationCap,
   ShieldCheck,
   CheckCircle2,
-  FileCheck,
+  ExternalLink,
 } from 'lucide-react';
 
 export default function CertificateManagement() {
@@ -43,7 +41,7 @@ export default function CertificateManagement() {
   const [selectedRegToIssue, setSelectedRegToIssue] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
 
-  // Preview Modal
+  // High-def preview modal
   const [previewCert, setPreviewCert] = useState(null);
 
   // Pagination
@@ -126,7 +124,7 @@ export default function CertificateManagement() {
             Certificate Credential Management
           </h1>
           <p className="text-xs text-slate-500">
-            Audit, authorize, issue, and verify official institutional completion certificates
+            Audit, authorize, issue, and verify official institutional completion certificates for {COLLEGE_CONFIG.name}
           </p>
         </div>
 
@@ -136,6 +134,7 @@ export default function CertificateManagement() {
           icon={Plus}
           onClick={() => setShowIssueModal(true)}
           disabled={eligibleRegistrations.length === 0}
+          className="bg-blue-950 hover:bg-blue-900"
         >
           Issue Certificate ({eligibleRegistrations.length} eligible)
         </Button>
@@ -143,7 +142,7 @@ export default function CertificateManagement() {
 
       {/* Filter Card */}
       <Card noPadding>
-        <div className="p-4 flex items-center justify-between gap-4">
+        <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="w-full sm:w-80">
             <Input
               placeholder="Search by serial no, student, or event..."
@@ -157,7 +156,7 @@ export default function CertificateManagement() {
           </div>
 
           <span className="text-xs text-slate-500">
-            Total <strong>{certificates.length}</strong> certificates issued
+            Total <strong>{certificates.length}</strong> certificates registered
           </span>
         </div>
       </Card>
@@ -189,7 +188,7 @@ export default function CertificateManagement() {
                 {paginatedList.map((cert) => (
                   <tr key={cert.id} className="hover:bg-slate-50/80 transition-colors">
                     <td className="py-3 px-4">
-                      <div className="font-mono font-bold text-amber-800 flex items-center gap-1.5">
+                      <div className="font-mono font-bold text-amber-900 flex items-center gap-1.5">
                         <Award className="w-3.5 h-3.5 text-amber-600 shrink-0" />
                         <span>{cert.certificate_no}</span>
                       </div>
@@ -218,12 +217,12 @@ export default function CertificateManagement() {
 
                     <td className="py-3 px-4 text-right space-x-1 whitespace-nowrap">
                       <Button
-                        variant="ghost"
+                        variant="outline"
                         size="sm"
                         icon={Eye}
                         onClick={() => setPreviewCert(cert)}
                       >
-                        Preview
+                        Preview & PDF
                       </Button>
                     </td>
                   </tr>
@@ -246,8 +245,8 @@ export default function CertificateManagement() {
       <Modal
         isOpen={showIssueModal}
         onClose={() => setShowIssueModal(false)}
-        title="Issue Official Certificate"
-        subtitle="Authorize completion credentials for verified student attendees"
+        title="Issue Official Academic Certificate"
+        subtitle="Authorize verified completion credentials with tamper-proof verification seal"
         footer={
           <>
             <Button variant="outline" size="sm" onClick={() => setShowIssueModal(false)}>
@@ -259,15 +258,16 @@ export default function CertificateManagement() {
               loading={actionLoading}
               onClick={handleIssueCertificate}
               disabled={!selectedRegToIssue}
+              className="bg-blue-950 hover:bg-blue-900"
             >
-              Generate & Issue
+              Generate & Issue Certificate
             </Button>
           </>
         }
       >
         <form onSubmit={handleIssueCertificate} className="space-y-4">
           <div className="p-3 rounded-lg bg-blue-50 border border-blue-200 text-blue-900 text-xs">
-            Students listed below have been marked as <strong>ATTENDED</strong> by the organizer and do not currently have a certificate issued.
+            Students listed below have been verified with <strong>ATTENDED</strong> status by the event coordinator and are eligible for official institutional certification.
           </div>
 
           <Select
@@ -279,75 +279,21 @@ export default function CertificateManagement() {
               value: r.id,
               label: `${r.student?.name} (${r.student?.student_id_number || r.student?.email}) — ${r.event?.title}`,
             }))}
-            placeholder="Select eligible student record..."
+            placeholder="Select eligible student attendee..."
           />
         </form>
       </Modal>
 
-      {/* Preview Modal */}
+      {/* High-Definition Certificate Preview & Download Modal */}
       {previewCert && (
-        <Modal
+        <CertificatePreviewModal
           isOpen={Boolean(previewCert)}
           onClose={() => setPreviewCert(null)}
-          title="Certificate Credential Preview"
-          subtitle={previewCert.certificate_no}
-          maxWidth="max-w-2xl"
-          footer={
-            <Button variant="outline" size="sm" onClick={() => setPreviewCert(null)}>
-              Close
-            </Button>
-          }
-        >
-          <div className="border-4 border-double border-blue-900 p-8 rounded-xl bg-gradient-to-b from-white to-amber-50/30 text-center space-y-4">
-            <div className="w-12 h-12 rounded-full bg-blue-900 text-white flex items-center justify-center mx-auto shadow-sm">
-              <GraduationCap className="w-7 h-7" />
-            </div>
-
-            <div>
-              <h2 className="text-xl font-bold tracking-tight text-blue-950 uppercase">
-                {COLLEGE_CONFIG.name}
-              </h2>
-              <p className="text-xs text-slate-500 font-serif italic">
-                Office of Academic Affairs & Student Enrichment
-              </p>
-            </div>
-
-            <div className="py-2">
-              <span className="text-xs font-bold text-amber-800 uppercase tracking-widest border-y border-amber-300 py-1 px-4 inline-block">
-                Certificate of Completion
-              </span>
-            </div>
-
-            <p className="text-xs text-slate-600 leading-relaxed">This is to certify that</p>
-
-            <h3 className="text-xl font-bold text-slate-900 border-b border-slate-300 pb-1 max-w-sm mx-auto">
-              {previewCert.student?.name}
-            </h3>
-
-            <p className="text-xs text-slate-600 max-w-md mx-auto">
-              Student ID: <span className="font-mono font-semibold">{previewCert.student?.student_id_number || 'N/A'}</span> has successfully completed
-            </p>
-
-            <h4 className="text-base font-bold text-blue-900 max-w-md mx-auto">
-              "{previewCert.event?.title || 'Campus Event'}"
-            </h4>
-
-            <div className="pt-6 border-t border-slate-200 flex items-center justify-between text-[11px] text-slate-500 max-w-md mx-auto">
-              <div>
-                <p className="font-semibold text-slate-800">College Administration</p>
-                <p>Authorized Issuer</p>
-              </div>
-              <div className="flex items-center gap-1 text-emerald-700 font-semibold">
-                <ShieldCheck className="w-4 h-4" />
-                <span>Verified Credential</span>
-              </div>
-              <div>
-                <p className="font-semibold text-slate-800">{formatDate(previewCert.issued_at)}</p>
-                <p>Issued Date</p>
-              </div>
-            </div>
-          </div>
-        </Modal>
+          certificate={previewCert}
+          onDownloadSuccess={(c) => {
+            showToast(`Certificate ${c.certificate_no} downloaded successfully.`, 'success');
+          }}
+        />
       )}
     </div>
   );
